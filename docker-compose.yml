@@ -1,0 +1,27 @@
+version: '3.4'
+services:
+  db:
+    image: "mcr.microsoft.com/mssql/server"
+    environment:
+      SA_PASSWORD: "Your_password123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+  csharp-api-pull:
+    depends_on:
+      - db
+    volumes:
+      - ../photos:/photos
+    image: ${DOCKER_REGISTRY-}csharpapipull
+    build:
+      context: .
+      dockerfile: ./csharp-api-example/Dockerfile
+    command: bash -c "sleep 15 && dotnet csharp-api-example.dll"
+# Sleep in command allows db time to finish starting up.
+# The db is ephemeral, it will not keep the data if it is shut down, you should mount a volume to persist the data.
+#  csharpi-api-tests:
+#    image: ${DOCKER_REGISTRY-}csharpiapitests
+#    build:
+#      context: .
+#      dockerfile: csharpi-api-tests/Dockerfile
+
