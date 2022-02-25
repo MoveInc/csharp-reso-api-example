@@ -1,8 +1,8 @@
 ﻿# RESO Web API data pull using .net core
 
 ## This project is meant to be a guide to help get started with the RESO Web API.
-> You can run "docker-compose up" inside the src directory to see it in action, the first time it is ran will take a little time as it is downloading all fake photos for all listings.
-> It takes roughly 2-3 hours for a full API sync and just a few minutes for the incremental updates with this impelementation, photo downloads included. There are several possible improvements depending on how you want to go about it, this is just an example of one solution.
+>- You can run "docker-compose up" inside the src directory to see it in action, the first time it is ran will take a little time as it is downloading all fake photos for all listings.
+>- It takes roughly 2-3 hours for a full API sync and just a few minutes for the incremental updates with this impelementation, photo downloads included. There are several possible improvements depending on how you want to go about it, this is just an example of one solution.
 
 ## NOTE:
 > The photos persist locally in "../photos/" change the docker-compose.yml if you want to save them locally somewhere else.

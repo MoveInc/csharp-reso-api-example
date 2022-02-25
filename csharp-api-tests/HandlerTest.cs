@@ -6,7 +6,7 @@ using System;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 
-namespace csharpi_api_tests
+namespace csharp_api_tests
 {
     [TestClass]
     public class HandlerTest

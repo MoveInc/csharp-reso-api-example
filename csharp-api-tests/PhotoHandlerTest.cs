@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using csharp_api_example;
 using System;
 
-namespace csharpi_api_tests
+namespace csharp_api_tests
 {
     [TestClass]
     public class PhotoHandlerTest

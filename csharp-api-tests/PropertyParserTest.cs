@@ -8,7 +8,7 @@ using System.Linq;
 using csharp_api_example.data;
 using System.Collections.Generic;
 
-namespace csharpi_api_tests
+namespace csharp_api_tests
 {
     [TestClass]
     public class PropertyParserTest

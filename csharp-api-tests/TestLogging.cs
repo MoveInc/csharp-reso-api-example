@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 
-namespace csharpi_api_tests
+namespace csharp_api_tests
 {
     public static class TestLogging
     {

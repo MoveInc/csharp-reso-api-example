@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <RootNamespace>csharpi_api_tests</RootNamespace>
+    <RootNamespace>csharp_api_tests</RootNamespace>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>

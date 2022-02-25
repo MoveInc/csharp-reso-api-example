@@ -11,6 +11,7 @@ COPY . .
 WORKDIR "/src/csharp-api-example"
 RUN dotnet build "csharp-api-example.csproj" -c Release -o /app/build
 
+
 FROM build AS publish
 RUN dotnet publish "csharp-api-example.csproj" -c Release -o /app/publish
 

@@ -19,9 +19,3 @@ services:
     command: bash -c "sleep 15 && dotnet csharp-api-example.dll"
 # Sleep in command allows db time to finish starting up.
 # The db is ephemeral, it will not keep the data if it is shut down, you should mount a volume to persist the data.
-#  csharpi-api-tests:
-#    image: ${DOCKER_REGISTRY-}csharpiapitests
-#    build:
-#      context: .
-#      dockerfile: csharpi-api-tests/Dockerfile
-
