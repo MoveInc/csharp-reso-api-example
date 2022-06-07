@@ -14,14 +14,12 @@ using Newtonsoft.Json.Linq;
 namespace csharp_api_example
 {
     // Handles the requests to the api and adding/updating Properties in the DB
-    // Photos are handles separately, most important logic is here.
     public class Handler
     {
         Stopwatch Parserwatch = new Stopwatch();
         private readonly ILogger<BackgroundService> _logger;
         Stopwatch APIwatch = new Stopwatch();
         Stopwatch DBwatch = new Stopwatch();
-        Stopwatch PhotoWatch = new Stopwatch();
         private List<String> APIPropertyKeys = new List<string>();
 
         public Handler(ILogger<BackgroundService> logger)
@@ -39,32 +37,40 @@ namespace csharp_api_example
             // so we can use the nextLink to tell us whether or not we need to query the API more.
             while (nextLink)
             {
-                if (url != null)
+                try
                 {
-                    var results = GetResults(url);
-                    var properties = results.Property("value").Value.ToList<JToken>();
-                    count += properties.Count;
-                    _logger.LogWarning("Properties downloaded from API: " + count);
-                    ParseProperties(properties, previousSync, dbContext);
-
-                    if (results.Property("@odata.nextLink") != null)
+                    if (url != null)
                     {
-                        var newUrl = results.Property("@odata.nextLink").Value.ToString();
-                        _logger.LogWarning("NEXT LINK = " + newUrl);
-                        if (newUrl != null)
+                        var results = GetResults(url);
+                        var properties = results.Property("value").Value.ToList<JToken>();
+                        count += properties.Count;
+                        _logger.LogWarning("Properties downloaded from API: " + count);
+                        ParseProperties(properties, previousSync, dbContext);
+
+                        if (results.Property("@odata.nextLink") != null)
                         {
-                            url = newUrl;
+                            var newUrl = results.Property("@odata.nextLink").Value.ToString();
+                            _logger.LogWarning("NEXT LINK = " + newUrl);
+                            if (newUrl != null)
+                            {
+                                url = newUrl;
+                            }
+                            else
+                            {
+                                _logger.LogWarning("URL IS NULL");
+                                break;
+                            }
                         }
                         else
                         {
-                            _logger.LogWarning("URL IS NULL");
-                            break;
+                            nextLink = false;
                         }
                     }
-                    else
-                    {
-                        nextLink = false;
-                    }
+                } catch (Exception ex)
+                {
+                    _logger.LogCritical(ex.StackTrace);
+                    _logger.LogWarning("Failed in API processing loop, trying again in 10 seconds.");
+                    Thread.Sleep(10000);
                 }
             }
 
@@ -75,7 +81,7 @@ namespace csharp_api_example
         }
 
         // Get the JSON results from the API
-        public JObject GetResults(string url, int fails = 0)
+        public JObject GetResults(string url, int fails = 1)
         {
             string result;
             JObject jsonResult;
@@ -103,12 +109,14 @@ namespace csharp_api_example
             }
             catch (Exception ex)
             {
-                if (fails == 3)
+                if (fails == 5)
                 {
+                    _logger.LogError("Failed to get results from API 5 times.");
                     throw new Exception(ex.Message);
                 }
 
-                Thread.Sleep(30000);
+                _logger.LogWarning("Failed to get data, trying again in 10 seconds");
+                Thread.Sleep(10000);
                 GetResults(url, ++fails);
             }
 
@@ -159,44 +167,10 @@ namespace csharp_api_example
         // Writes Properties to the DB and updates/deletes/adds photos.
         public void WriteToDB(List<Property> props, PropertyContext c, DateTime previousSync, int fails = 0, bool noPhotos = true)
         {
-            var photoHandler = new PhotoHandler(_logger);
-
             foreach (Property prop in props)
             {
                 if (c.Property.Any(p => p.ListingKey.Equals(prop.ListingKey)))
                 {
-                    PhotoWatch.Start();
-                    var dbProp = c.Property.AsNoTracking().Where(p => p.ListingKey.Equals(prop.ListingKey)).First();
-                    var dbMedia = dbProp.Media;
-
-                    // Changes were made to the photos
-                    if (!dbMedia.Equals(prop.Media))
-                    {
-                        var JArrayDbMedia = JArray.Parse(dbMedia);
-                        var JArrayPropMedia = JArray.Parse(prop.Media);
-                        var propMediaKeys = new List<string>();
-
-                        // Only want to remove photos based on their key,
-                        // if a photo has been updated it will be taken care of later
-                        // after all updates and adds have been completed.
-                        foreach (var photo in JArrayPropMedia)
-                        {
-                            propMediaKeys.Add(photo["MediaKey"].ToString());
-                        }
-
-                        // Looking for photos that exist in the DB, but not in API
-                        foreach (var photo in JArrayDbMedia)
-                        {
-                            var photokey = photo["MediaKey"].ToString();
-
-                            if (!propMediaKeys.Contains(photokey))
-                            {
-                                photoHandler.DeletePhoto(prop.ListingKey, photo["MediaKey"].ToString());
-                            }
-                        }
-                    }
-                    PhotoWatch.Stop();
-
                     DBwatch.Start();
                     c.Property.Update(prop);
                     DBwatch.Stop();
@@ -206,24 +180,6 @@ namespace csharp_api_example
                     DBwatch.Start();
                     c.Property.Add(prop);
                     DBwatch.Stop();
-                }
-
-                if (!noPhotos)
-                {
-                    PhotoWatch.Start();
-                    var photos = JArray.Parse(prop.Media);
-                    foreach (var photo in photos)
-                    {
-                        var mediaMod = photo["MediaModificationTimestamp"].ToString();
-                        // final path /photos/listingkey/mediakey
-                        var saveFolder = prop.ListingKey + "/" + photo["MediaKey"].ToString();
-                        var fakeURL = "http://pm1.narvii.com/6328/191809f20b95dcb3ff153098a4df6e1275e0303f_00.jpg";
-                        //var fakeURL = "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500";
-                        //photoHandler.SavePhoto(photo["MediaURL"].ToString(), saveFolder);
-                        photoHandler.SavePhoto(fakeURL, saveFolder, previousSync, mediaMod);
-                    }
-                    PhotoWatch.Stop();
-                    _logger.LogCritical("Photo transaction timer: " + PhotoWatch.Elapsed.ToString());
                 }
             }
             DBwatch.Start();
@@ -239,12 +195,15 @@ namespace csharp_api_example
             _logger.LogWarning("Beginning DB deletes");
             var propsToDelete = new List<String>();
             var propsInDB = GetPropertiesFromDB(dbContext);
+            _logger.LogWarning("Retrieved props from db.");
             var DBpropsKeys = new List<string>();
 
             foreach (var prop in propsInDB)
             {
                 DBpropsKeys.Add(prop.ListingKey);
             }
+
+            _logger.LogWarning("Created list of listing keys, checking for props that need deleted.");
 
             foreach (var DBpropKey in DBpropsKeys)
             {
@@ -254,15 +213,11 @@ namespace csharp_api_example
                 // it can be deleted from the DB
                 if (!APIPropertyKeys.Contains(DBpropKey))
                 {
+                    _logger.LogWarning("Deleting " + DBpropKey);
                     propsToDelete.Add(DBpropKey);
                 }
             }
             DeletePropertiesFromDB(dbContext, propsToDelete);
-            PhotoHandler photoHandler = new PhotoHandler(_logger);
-            foreach (var prop in propsToDelete)
-            {
-                photoHandler.DeletePhotos(prop);
-            }
             _logger.LogWarning("Deletes complete");
         }
     }

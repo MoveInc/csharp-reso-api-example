@@ -2,12 +2,10 @@
 
 ## This project is meant to be a guide to help get started with the RESO Web API.
 >- Portions of this repo should be configured by publishers the way they would like it configured, i.e. Program.cs connection string, and FullWorker/IncrementalWorker urls.
->- You can run "docker-compose up" inside the src directory to see it in action, the first time it is ran will take a little time as it is downloading all fake photos for all listings.
->- It takes roughly 2-3 hours for a full API sync and just a few minutes for the incremental updates with this impelementation, photo downloads included. There are several possible improvements depending on how you want to go about it, this is just an example of one solution.
+>- You can run "docker-compose up" inside the src directory to see it in action.
+>- It takes roughly 1-2 hours for a full API sync and just a few minutes for the incremental updates with this impelementation. There are several possible improvements depending on how you want to go about it, this is just an example of one solution.
 
 ## NOTE:
-> The photos persist locally in "../photos/" change the docker-compose.yml if you want to save them locally somewhere else.
->
 > The database does not persist.
 
 ## General overview
@@ -29,8 +27,6 @@
 >
 > "ApiWorker.cs" controls when the IncrementalWorker and FullWorker run so they cannot run at the same time.
 >
-> "Handler.cs" takes care of database transactions, API calls, and begins photo transactions
->
-> "PhotoHandler.cs" takes care of downloading and deleting photos with the help of "Handler"
+> "Handler.cs" takes care of database transactions, and API calls.
 >
 > "Program.cs" contains logic to migrate the DB any time the docker container is started and the command needed to create new migrations

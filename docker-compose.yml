@@ -10,8 +10,6 @@ services:
   csharp-api-pull:
     depends_on:
       - db
-    volumes:
-      - ../photos:/photos
     image: ${DOCKER_REGISTRY-}csharpapipull
     build:
       context: .
