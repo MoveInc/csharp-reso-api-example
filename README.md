@@ -5,7 +5,7 @@
 - Portions of this repo should be configured by publishers the way they would
   like it configured, i.e. Program.cs connection string, and
   FullWorker/IncrementalWorker urls.
-- You can run "docker-compose up" inside the src directory to see it in action.
+- This repo is meant to be ran with docker compose, docker build will fail on its own, you can run "docker-compose up" to see it in action.
 - It takes roughly 1-2 hours for a full API sync and just a few minutes for the
   incremental updates with this implementation. There
   are several possible improvements depending on how you want to go about it,
