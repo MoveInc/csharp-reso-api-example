@@ -2,14 +2,20 @@
 
 ## This project is meant to be a guide to help get started with the RESO Web API.
 
-- Portions of this repo should be configured by publishers the way they would
+This repo is meant to be an example of how to pull data from the RESO API and
+insert it into a local DB. After starting the full pull runs once every 24 hours
+to get all the listings of a publisher using the API. The modified listings are
+updated and the inactive listings are deleted from the database, each time full
+pull is run.
+
+- Portions of this repo should be configured the way you would
   like it configured, i.e. Program.cs connection string, and
   FullWorker/IncrementalWorker urls.
-- This repo is meant to be ran with docker compose, docker build will fail on its own, you can run "docker-compose up" to see it in action.
+- This repo is meant to be executed with docker compose, docker build will fail on its own, you can run "docker-compose up" to see it in action.
 - It takes roughly 1-2 hours for a full API sync and just a few minutes for the
   incremental updates with this implementation. There
   are several possible improvements depending on how you want to go about it,
-  this is just an example of one solution.
+  this is an example of one solution.
 
 ## NOTE:
 
